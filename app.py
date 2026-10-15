@@ -2,21 +2,26 @@ import streamlit as st
 import pandas as pd
 import os
 from datetime import datetime
+
 st.set_page_config(page_title="SQMS Portal", layout="wide")
 REQUIRED_DOCS=["Safety Certificate","Quality Audit","Insurance","Compliance Declaration"]
 os.makedirs("uploads",exist_ok=True)
 UPLOAD_LOG="uploads_log.csv"
+
 if os.path.exists(UPLOAD_LOG):
  log_df=pd.read_csv(UPLOAD_LOG)
 else:
  log_df=pd.DataFrame(columns=["Supplier","Document Type","File Name","Upload Date"])
+
 try:
  df=pd.read_csv("SQMS_data.csv")
 except:
  df=pd.read_csv("supplier_compliance.csv")
+
 suppliers_list=df['Supplier'].unique().tolist()
 st.sidebar.title("SQMS Portal")
 role=st.sidebar.selectbox("You are:",["Supplier Upload","Admin Dashboard"])
+
 if role=="Supplier Upload":
  st.title("📤 Supplier Document Portal")
  supplier_name=st.selectbox("Select your Supplier Name",suppliers_list)
@@ -56,10 +61,16 @@ else:
   for _,r in log_df.iterrows():
    if r["Supplier"] in compliance_matrix.index and r["Document Type"] in compliance_matrix.columns:
     compliance_matrix.loc[r["Supplier"],r["Document Type"]]=1
- emoji_df=compliance_matrix.replace({1:"✅",0:"❌"})
+ emoji_df=compliance_matrix.applymap(lambda x: "✅" if x==1 else "❌")
  st.dataframe(emoji_df,use_container_width=True)
  st.subheader("3. Compliance % per Supplier")
  temp=compliance_matrix.copy()
  temp["Uploaded"]=temp[REQUIRED_DOCS].sum(axis=1)
  temp["% Complete"]=(temp["Uploaded"]/len(REQUIRED_DOCS)*100).astype(int)
  st.bar_chart(temp["% Complete"])
+ st.divider()
+ st.subheader("4. All Uploaded Files")
+ if not log_df.empty:
+  st.dataframe(log_df.sort_values("Upload Date",ascending=False),use_container_width=True)
+ else:
+  st.info("No uploads yet.")
