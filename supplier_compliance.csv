@@ -1,0 +1,3 @@
+supplier_code,supplier_name,manual_status,total_docs,auto_status
+PREM-001,"Premier Packaging SA",Approved,2,Approved
+CAPE-002,"Cape Dairy Supplies",Conditional,1,Conditional
