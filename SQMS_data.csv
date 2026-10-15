@@ -1,0 +1,4 @@
+Supplier,Compliance Score,Status,Last Audit
+Supplier A,85,Compliant,2026-09-01
+Supplier B,92,Compliant,2026-10-01
+Supplier C,78,Needs Review,2026-08-15
