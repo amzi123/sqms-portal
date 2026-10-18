@@ -110,4 +110,66 @@ else:
                     st.info("SQMS will review and your % rating will update automatically.")
                 else:
                     st.warning("Please attach file first")
-                    
+
+
+# === ADD FORM 1 HERE - M-PRO-01697 ===
+st.divider()
+st.subheader("📋 Form 1: Supplier Assessment Form (M-PRO-01697)")
+st.caption("Document: M-PRO-01697 | Version 1 | Approved: 05 May 2025")
+
+with st.form("form1"):
+    st.markdown("**1. Certification (Tick Yes/No)**")
+    c1, c2, c3, c4 = st.columns(4)
+    fssc = c1.radio("FSSC 22000", ["No","Yes"], key="fssc")
+    haccp = c2.radio("HACCP", ["No","Yes"], key="haccp")
+    iso22000 = c3.radio("ISO 22000", ["No","Yes"], key="iso22000")
+    brc = c4.radio("BRC", ["No","Yes"], key="brc")
+    c5, c6, c7 = st.columns(3)
+    fsa = c5.radio("FSA", ["No","Yes"], key="fsa")
+    ifs = c6.radio("IFS", ["No","Yes"], key="ifs")
+    iso9001 = c7.radio("ISO 9001", ["No","Yes"], key="iso9001")
+    
+    other_cert = st.text_input("Any other certification? State name")
+
+    st.markdown("**2. If YES to any above:**")
+    cert_body = st.text_input("a) Which certification body and registration Number(s)?")
+    
+    st.markdown("b) Criteria covered in your documented Management System - tick relevant:")
+    criteria = st.multiselect("Select all that apply",
+        ["Management Responsibility","Document and Data Control","Control of Customer Supplied Product",
+         "Product Identification and Traceability","Purchasing","HACCP system",
+         "GMP (TS 22002-1), especially Allergen Control","Process Control","Inspection and Testing",
+         "Control of Inspection, Measuring and Testing Equipment","Inspection and Test Status",
+         "Control of Non-Conforming Product","Corrective and Preventive Action",
+         "Handling, Storage, Packaging, Preservation and Delivery","Control of Records",
+         "Internal Audits","Training"])
+    
+    st.markdown("**3. If NO formal Food Safety/QMS:**")
+    intention = st.radio("a) Is it your intention to implement a formal System?", ["N/A - We have certification","Yes","No"])
+    impl_date = st.date_input("b) Expected date of implementation", value=None)
+    controls_desc = st.text_area("c) If NO, detailed description of controls to guarantee Quality and Food Safety (or attach separately)")
+
+    st.markdown("**3c) Detailed Description of Possible Controls Exercised**")
+    formal_controls = st.multiselect("Select controls you exercise (Yes)",
+        ["Management Planning / Review","Raw Materials Inspection and Testing","Process Control Checks",
+         "Product / Project Approval (before Despatch)","Planned / Preventive Maintenance",
+         "Work Instructions in Place where Relevant","Training Plan","Supplier Assessment (Incl. Transport)"])
+    
+    other = st.text_area("Other:")
+    
+    st.markdown("**4. Questionnaire completed by:**")
+    col1, col2 = st.columns(2)
+    with col1:
+        title = st.text_input("Title")
+        position = st.text_input("Position")
+        company = st.text_input("Company")
+    with col2:
+        name = st.text_input("Name")
+        signature = st.text_input("Signature (type full name)")
+        date = st.date_input("Date")
+
+    docs = st.file_uploader("Upload supporting Management System Document(s) / Certificate", accept_multiple_files=True)
+
+    if st.form_submit_button("✅ Submit Assessment Form"):
+        st.success(f"Thank you {name} from {company} - Form M-PRO-01697 submitted! You may not need a physical audit.")
+        st.balloons()
