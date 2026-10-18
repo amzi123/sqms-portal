@@ -73,12 +73,11 @@ else: # Supplier
     # Compliance metrics
     if "percent_rating" in df.columns:
         c1,c2,c3 = st.columns(3)
-        c1.metric("Avg Compliance", f"{filtered['percent_rating'].mean():.0f}%" if len(filtered) else "0%")
-        if "status" in df.columns:
-            c2.metric("Approved", len(filtered[filtered["status"]=="Approved"]) if "status" in filtered.columns else 0)
-            c3.metric("Pending", len(filtered[filtered["status"]=="Pending"]) if "status" in filtered.columns else 0)
+            c1.metric("Avg Compliance", f"{filtered['percent_rating'].mean():.0f}%" if len(filtered) else "0%")
+    if "status" in df.columns:
+        c2.metric("Approved", len(filtered[filtered["status"]=="Approved"]) if "status" in filtered.columns else 0)
+        c3.metric("Pending", len(filtered[filtered["status"]=="Pending"]) if "status" in filtered.columns else 0)
 
-# --- 2. SUPPLIER VIEW (Isolated - Sees ONLY own name) ---
 else:
     st.subheader("Supplier Document Upload - Secure")
 
