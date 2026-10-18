@@ -1,124 +1,113 @@
 import streamlit as st
 import pandas as pd
-from datetime import date
 
 st.set_page_config(page_title="SQMS Portal", layout="wide")
 st.title("📊 SQMS Supplier Portal - Food Safety Compliance")
+st.caption("IT-Ready Version - Supplier Isolation + No Styler Error")
 
 @st.cache_data
 def load_data():
+    # Your file is supplier_compliance.csv
     try:
         df = pd.read_csv("supplier_compliance.csv")
         return df
-    except Exception as e:
-        st.error(f"Could not load supplier_compliance.csv: {e}")
-        return None
+    except:
+        # Fallback if file name is different
+        return pd.read_csv("SQMS_data.csv")
 
 df = load_data()
-if df is None:
-    st.stop()
 
-# Reorder: Supplier & Manufacturer FIRST
-priority_cols = ["supplier_distributor", "manufacturer", "rm_code", "rm_description", "origin_country", "vendor_code", "mfg_code"]
-other_cols = [c for c in df.columns if c not in priority_cols]
-ordered_cols = [c for c in priority_cols if c in df.columns] + other_cols
+# --- Priority columns first (Supplier & Manufacturer first) ---
+priority = ["supplier_distributor","manufacturer","rm_code","rm_description","origin_country","vendor_code","mfg_code"]
+other_cols = [c for c in df.columns if c not in priority]
+ordered = [c for c in priority if c in df.columns] + other_cols
 
 # --- SIDEBAR ---
-role = st.sidebar.selectbox("You are:", ["SQMS View", "Supplier Upload"])
-st.sidebar.metric("Total RM", len(df))
+role = st.sidebar.selectbox("Login as:", ["SQMS Admin (All)", "Supplier (My RMs Only)"])
+st.sidebar.metric("Total RMs", len(df))
 
-# --- TRY TO READ SECRETS (if set), else work without crashing ---
+# --- READ EMAILS FROM STREAMLIT SECRETS (Secure, not in GitHub) ---
 try:
-    supplier_emails = st.secrets.get("supplier_logins", {})
-    has_secrets = len(supplier_emails) > 0
+    SECRETS = st.secrets.get("supplier_logins", {})
+    HAS_SECRETS = len(SECRETS) > 0
 except:
-    has_secrets = False
-    supplier_emails = {}
+    HAS_SECRETS = False
+    SECRETS = {}
 
-# --- SQMS VIEW ---
-if role == "SQMS View":
-    st.subheader(f"SQMS Compliance Dashboard - {len(df)} Raw Materials")
+# --- 1. SQMS ADMIN VIEW (Sees All) ---
+if role == "SQMS Admin (All)":
+    st.subheader(f"SQMS Dashboard - {len(df)} Raw Materials")
     
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        sup_filter = st.multiselect("Filter by Supplier", options=df["supplier_distributor"].unique())
-    with c2:
-        country_filter = st.multiselect("Filter by Country", options=df["origin_country"].unique())
-    with c3:
-        if "status" in df.columns:
-            status_filter = st.multiselect("Filter by Status", options=df["status"].unique())
-        else:
-            status_filter = []
+    col1, col2 = st.columns(2)
+    with col1:
+        sup_filter = st.multiselect("Filter Supplier", df["supplier_distributor"].unique())
+    with col2:
+        country_filter = st.multiselect("Filter Country", df["origin_country"].unique() if "origin_country" in df.columns else [])
 
-    filtered = df[ordered_cols].copy()
+    filtered = df[ordered].copy()
     if sup_filter:
         filtered = filtered[filtered["supplier_distributor"].isin(sup_filter)]
-    if country_filter:
+    if country_filter and "origin_country" in df.columns:
         filtered = filtered[filtered["origin_country"].isin(country_filter)]
-    if status_filter:
-        filtered = filtered[filtered["status"].isin(status_filter)]
 
-    # FIXED: No Styler, just plain dataframe
-    st.dataframe(filtered, width='stretch', height=400)
+    # FIXED: No df.style — this was causing AttributeError at line 36
+    st.dataframe(filtered, width='stretch', height=450)
     
-    if "percent_rating" in filtered.columns:
-        m1, m2, m3 = st.columns(3)
-        m1.metric("Avg Compliance", f"{filtered['percent_rating'].astype(int).mean():.0f}%")
-        if "status" in filtered.columns:
-            m2.metric("Approved", len(filtered[filtered['status']=='Approved']))
-            m3.metric("Pending", len(filtered[filtered['status']=='Pending']))
+    # Compliance metrics
+    if "percent_rating" in df.columns:
+        c1,c2,c3 = st.columns(3)
+        c1.metric("Avg Compliance", f"{filtered['percent_rating'].mean():.0f}%" if len(filtered) else "0%")
+        if "status" in df.columns:
+            c2.metric("Approved", len(filtered[filtered["status"]=="Approved"]) if "status" in filtered.columns else 0)
+            c3.metric("Pending", len(filtered[filtered["status"]=="Pending"]) if "status" in filtered.columns else 0)
 
-# --- SUPPLIER UPLOAD (WITH ISOLATION) ---
+# --- 2. SUPPLIER VIEW (Isolated - Sees ONLY own name) ---
 else:
-    st.subheader("Supplier Document Upload - Secure Access")
+    st.subheader("Supplier Document Upload - Secure")
 
-    if has_secrets:
-        st.info("Secure mode: Enter your authorized email")
-        email_input = st.text_input("Work Email").lower().strip()
-        authorized_supplier = None
+    if HAS_SECRETS:
+        st.info("Enter your authorized work email (linked to your company)")
+        email = st.text_input("Work Email").strip().lower()
         
-        if email_input:
-            # Match email to supplier (contains check)
-            for key, secret_email in supplier_emails.items():
-                if secret_email.lower() == email_input:
-                    # Find supplier name that contains key
-                    for real_name in df["supplier_distributor"].unique():
-                        if key.lower() in real_name.lower() or key.lower() in secret_email.lower():
-                            # Map savannah -> Savannah, cjp -> CJP, teubes -> TEUBES
-                            if "savannah" in key.lower() and "savannah" in real_name.lower():
-                                authorized_supplier = real_name
-                            elif "cjp" in key.lower() and "cjp" in real_name.lower():
-                                authorized_supplier = real_name
-                            elif "teubes" in key.lower() and "teubes" in real_name.lower():
-                                authorized_supplier = real_name
-                    if authorized_supplier:
-                        break
-            
-            if not authorized_supplier:
-                st.error("Email not authorized. Contact SQMS if this is an error.")
+        matched_supplier = None
+        if email:
+            # Find which supplier this email belongs to
+            for key, secret_email in SECRETS.items():
+                if secret_email.lower() == email:
+                    # Find real supplier name containing that key
+                    for real in df["supplier_distributor"].unique():
+                        if key.lower() in real.lower() or (key=="cjp" and "cjp" in real.lower()) or (key=="teubes" and "teube" in real.lower()) or (key=="savannah" and "savannah" in real.lower()):
+                            matched_supplier = real
+                            break
+            if not matched_supplier:
+                st.error("Email not authorized. Contact SQMS Admin.")
                 st.stop()
-        else:
-            st.warning("Please enter email to continue")
-            st.stop()
     else:
-        # Fallback if Secrets not set yet - allow manual select (for testing)
-        st.warning("Secrets not set yet - running in TEST mode (IT will require Secrets)")
-        authorized_supplier = st.selectbox("Select your Supplier Name (TEST)", df["supplier_distributor"].unique())
+        # TEST MODE until you set Secrets in Streamlit Cloud
+        st.warning("Secrets not set yet - TEST MODE. Select supplier manually.")
+        matched_supplier = st.selectbox("Select Supplier (TEST)", df["supplier_distributor"].unique())
 
-    # Show ONLY their RMs
-    my_rms = df[df["supplier_distributor"] == authorized_supplier]
-    st.success(f"Welcome {authorized_supplier} - {len(my_rms)} RM(s) assigned")
-    st.dataframe(my_rms[ordered_cols], width='stretch')
+    if 'matched_supplier' in locals() and matched_supplier:
+        my_rms = df[df["supplier_distributor"] == matched_supplier]
+        st.success(f"Welcome {matched_supplier} — {len(my_rms)} RM(s) assigned to you")
+        
+        # They ONLY see their own RMs - not other suppliers
+        st.dataframe(my_rms[ordered], width='stretch')
 
-    rm_options = [f"{row['rm_code']} - {row['rm_description']}" for _, row in my_rms.iterrows()]
-    selected_rm = st.selectbox("Select RM to upload for", rm_options) if rm_options else None
-
-    doc_type = st.selectbox("Document Type", ["FSSC 22000 Certificate", "Kosher Certificate", "Halal Certificate", "TDS/Spec", "COA", "Allergen Statement", "VACCP Questionnaire", "TACCP Questionnaire", "MSDS"])
-    uploaded = st.file_uploader(f"Upload {doc_type} for {selected_rm}", type=["pdf","jpg","png","docx","xlsx"])
-
-    if st.button("Submit Document", type="primary"):
-        if uploaded:
-            st.success(f"✅ {doc_type} received for {selected_rm} ({authorized_supplier})! {uploaded.name}")
-            st.balloons()
-        else:
-            st.warning("Please upload a file first")
+        if len(my_rms):
+            rm_list = [f"{r['rm_code']} - {r['rm_description']}" for _, r in my_rms.iterrows()]
+            selected_rm = st.selectbox("Select RM to upload for", rm_list)
+            
+            doc_type = st.selectbox("Document Type", 
+                ["FSSC 22000 Certificate", "Kosher Certificate", "Halal Certificate", "TDS / Spec", "COA", "Allergen Statement", "VACCP Questionnaire", "TACCP Questionnaire", "MSDS", "Flow Diagram"])
+            
+            uploaded = st.file_uploader(f"Upload {doc_type}", type=["pdf","jpg","png","docx","xlsx"])
+            
+            if st.button("Submit Document", type="primary"):
+                if uploaded:
+                    st.success(f"✅ {doc_type} received for {selected_rm}! File: {uploaded.name}")
+                    st.balloons()
+                    st.info("SQMS will review and your % rating will update automatically.")
+                else:
+                    st.warning("Please attach file first")
+                    
