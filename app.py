@@ -290,3 +290,150 @@ with st.form("form2_taccp"):
     if st.form_submit_button("✅ Submit Assessment Form"):
         st.success(f"Thank you {name} from {company} - Form M-PRO-01697 submitted! You may not need a physical audit.")
         st.balloons()
+
+# === FORM 3: PRODUCT INFORMATION FORM M-PRO-00854 ===
+st.divider()
+st.subheader("📦 Form 3: Product Information Form (M-PRO-00854)")
+st.caption("Document: M-PRO-00854 | Version 1 | Approved: 03 March 2025 | dsm-firmenich")
+
+with st.form("form3_product_info"):
+    st.markdown("### 1. PRODUCT & CONTACT DETAILS")
+    c1, c2 = st.columns(2)
+    with c1:
+        cust_prod_name = st.text_input("Customer's Product Name", key="f3_cust_name")
+        supp_prod_name = st.text_input("Supplier's Product Name", key="f3_supp_name")
+        status = st.radio("Status", ["Existing Product", "New Product"], key="f3_status", horizontal=True)
+        is_food_grade = st.radio("Is the product Food Grade?", ["Yes","No"], key="f3_foodgrade", horizontal=True)
+        is_food_additive = st.radio("Is the product a Food Additive?", ["Yes","No"], key="f3_additive", horizontal=True)
+        ins_number = st.text_input("INS/E Number", key="f3_ins")
+        susceptible = st.radio("Is this product susceptible to Adulteration?", ["Yes","No"], key="f3_adult", horizontal=True)
+    with c2:
+        cust_prod_code = st.text_input("Customer's Product Code", key="f3_cust_code")
+        supp_prod_code = st.text_input("Supplier's Product Code", key="f3_supp_code")
+        adulterated_with = st.text_area("If yes, what product can it be adulterated with?", key="f3_adult_what")
+        tests_adult = st.text_area("Tests to confirm adulteration + frequency", key="f3_tests")
+
+    st.markdown("**1.1 Supplier Information**")
+    col_a, col_b = st.columns(2)
+    with col_a:
+        comp_name = st.text_input("Company Name", key="f3_comp")
+        trading_name = st.text_input("Trading Name", key="f3_trading")
+        biz_addr3 = st.text_area("Business Address", key="f3_biz3")
+        postal3 = st.text_area("Postal Address", key="f3_postal3")
+    with col_b:
+        tech_contact3 = st.text_input("Technical Contact Person", key="f3_tech3")
+        pos_title = st.text_input("Position Title", key="f3_pos")
+        phone3 = st.text_input("Phone", key="f3_phone")
+        email3 = st.text_input("Email", key="f3_email3")
+        cell3 = st.text_input("Cell (mobile)", key="f3_cell3")
+
+    st.markdown("**1.2 Manufacturer(s) if different to supplier**")
+    manuf_table = st.data_editor(
+        pd.DataFrame([{"Company Name":"","Site of Manufacture (City & Country)":""} for _ in range(3)]),
+        num_rows="dynamic", key="f3_manuf"
+    )
+
+    st.markdown("**1.4 Supplier Declaration and Warranty**")
+    st.caption("Supplier certifies product complies with SA legislation, info is true, will inform of changes")
+    decl_company = st.text_input("Company Name (Signed for and on behalf of)", key="f3_decl_comp")
+    decl_name = st.text_input("Name (please print)", key="f3_decl_name")
+    decl_title = st.text_input("Job Title (declaration)", key="f3_decl_title")
+    decl_sig = st.text_input("Authorised Signature (type name)", key="f3_decl_sig")
+    decl_date = st.date_input("Date (declaration)", key="f3_decl_date")
+
+    st.divider()
+    st.markdown("### 2. PRODUCT INFORMATION & INGREDIENTS")
+    prod_desc = st.text_area("2.1 Product Description (Physical and technological)", key="f3_prod_desc")
+    legal_desc = st.text_area("2.2 Legal Description / Suggested Labelling Description", key="f3_legal")
+    ingredient_decl = st.text_area("2.3 Ingredient Declaration including QUID (full list descending, % of characterising)", height=150, key="f3_ingred")
+    proc_aids = st.text_area("2.4 Processing Aids (carriers, anti-foam, divider oil, etc.)", key="f3_proc")
+    
+    st.markdown("**2.5 Country of Origin**")
+    origin_option = st.radio("Statement", ["Produce of","Made in","Made in - with Imported Ingredients","Other"], key="f3_origin")
+    origin_country = st.text_input("Insert Country Below", key="f3_origin_country")
+    imported_pct = st.text_input("Specify % Imported Ingredients", key="f3_import_pct")
+    imported_countries = st.text_input("Specify Country/IES of Imported Ingredients", key="f3_import_c")
+
+    st.markdown("**2.6 Component country of origin**")
+    comp_origin_table = st.data_editor(
+        pd.DataFrame([{"Ingredient":"","Country of origin":""} for _ in range(8)]),
+        num_rows="dynamic", key="f3_comp_origin"
+    )
+
+    st.divider()
+    st.markdown("### 3. ALLERGEN & COMPOSITIONAL INFORMATION")
+    st.markdown("**3.1 Mandatory Advisory or Warning Statements**")
+    adv_components = ["Aspartame","Saccharin","Cyclamate","Glutamates (MSG)","Tartrazine","Phytosterol esters / stanols","Any ingredients irradiated","Herbal and botanical extracts","Isomaltulose","Polyols, Isomalts, Polydextrose"]
+    advisory = {}
+    for comp in adv_components:
+        advisory[comp] = st.radio(f"{comp}", ["No","Yes"], key=f"f3_adv_{comp}", horizontal=True, index=None)
+
+    st.markdown("**3.2 Mandatory Declaration of certain substances + Cross Contact**")
+    allergens = ["Cereals containing gluten (wheat, rye, barley, oats, spelt)","Crustacea & crustacea products","Molluscs & mollusc products","Egg & egg products","Fish & fish products","Milk & milk products","Peanuts & peanut products","Soybeans & their products","Tree nuts & their products","Sulphites"]
+    allergen_data = {}
+    for aller in allergens:
+        col1, col2, col3 = st.columns([2,1,1])
+        with col1:
+            present = st.radio(f"{aller} - Present?", ["No","Yes"], key=f"f3_aller_{aller}", horizontal=True, index=None)
+        with col2:
+            same_line = st.radio("Same line?", ["No","Yes"], key=f"f3_line_{aller}", horizontal=True, index=None)
+        with col3:
+            same_fac = st.radio("Same facility?", ["No","Yes"], key=f"f3_fac_{aller}", horizontal=True, index=None)
+        allergen_data[aller] = {"present": present, "line": same_line, "facility": same_fac}
+
+    st.markdown("**3.3 Allergen Cross Contact**")
+    cross_contact = st.radio("Has your company addressed cross contact from allergen components?", ["Yes","No"], key="f3_cross", horizontal=True, index=None)
+    avoid_methods = st.multiselect("How is cross contact avoided? (tick all applicable)",
+        ["validated cleaning procedures (swabs/visual/Elisa)","production scheduling","control of personnel movement","staff training","documented procedures and controls","isolated storage of allergens","other"])
+    
+    st.divider()
+    st.markdown("### 4. DIETARY SUITABILITY")
+    vegan = st.radio("Vegan Suitable (NO meat, milk, eggs, honey)", ["Yes","No"], key="f3_vegan", horizontal=True, index=None)
+    lacto = st.radio("Lacto Vegetarian Suitable (contains milk)", ["Yes","No"], key="f3_lacto", horizontal=True, index=None)
+    ovo = st.radio("Ovo Vegetarian Suitable (contains egg)", ["Yes","No"], key="f3_ovo", horizontal=True, index=None)
+    ovo_lacto = st.radio("Ovo Lacto Vegetarian Suitable", ["Yes","No"], key="f3_ovolacto", horizontal=True, index=None)
+    halaal = st.radio("Halaal Suitable - Is product Halaal certified?", ["Yes - attach cert","No"], key="f3_halaal", horizontal=True, index=None)
+    kosher = st.radio("Kosher Suitable - Is product Kosher certified?", ["Yes - attach cert","No"], key="f3_kosher", horizontal=True, index=None)
+    organic = st.radio("Organic Certified?", ["Yes - attach cert","No"], key="f3_organic", horizontal=True, index=None)
+
+    st.divider()
+    st.markdown("### 5. CONTAMINANTS & GENE TECHNOLOGY")
+    st.caption("R.246 Pesticides, R.1809 Vet residues, R.500 Metals, R.491 Marine Biotoxins, R.1145 Mycotoxins, R.911 Solvents - All must comply SA legislation")
+    pesticides = st.radio("Complies with R.246 pesticide residues?", ["Yes","No"], key="f3_pest", horizontal=True, index=None)
+    
+    st.markdown("**5.2 Food Produced using Gene Technology**")
+    gm_q1 = st.radio("Q1: Any GM material/derived from GM substrates/organisms?", ["Yes","May contain","No - Go to Section 6"], key="f3_gm1", horizontal=True, index=None)
+    gm_q2 = st.radio("Q2: Require labelling per R.25 GM labelling?", ["Yes","No"], key="f3_gm2", horizontal=True, index=None)
+    gm_q3 = st.radio("Q3: Product contains GM novel DNA/protein?", ["Does not contain","Contains or May contain exempt from labelling","Contains or May contain which requires labelling"], key="f3_gm3", horizontal=True, index=None)
+    gm_q4 = st.radio("Q4: Any GM components have altered characteristics?", ["Yes","No"], key="f3_gm4", horizontal=True, index=None)
+    gm_table = st.data_editor(
+        pd.DataFrame([{"GM Component":"","Altered Characteristics":""} for _ in range(3)]),
+        num_rows="dynamic", key="f3_gm_table"
+    )
+
+    st.divider()
+    st.markdown("### 6. STORAGE & 8. SPECIFICATIONS")
+    st.markdown("**6.1 Storage & Transportation**")
+    c_s1, c_s2 = st.columns(2)
+    with c_s1:
+        storage_unopened = st.text_input("Recommended Storage Conditions - Unopened", key="f3_store_un")
+        shelf_unopened = st.text_input("Shelf Life - Unopened", key="f3_shelf_un")
+    with c_s2:
+        storage_opened = st.text_input("Recommended Storage Conditions - Opened", key="f3_store_op")
+        shelf_opened = st.text_input("Shelf Life - Opened", key="f3_shelf_op")
+    transport_req = st.text_input("Recommended Transportation Requirements", key="f3_trans")
+
+    st.markdown("**8.1 Physical Specifications**")
+    phys_table = st.data_editor(pd.DataFrame([{"Test / Parameter":"","Specification":"","Test Method":""} for _ in range(3)]), num_rows="dynamic", key="f3_phys")
+    st.markdown("**8.2 Chemical Specifications**")
+    chem_table = st.data_editor(pd.DataFrame([{"Test / Parameter":"","Specification":"","Test Method":""} for _ in range(3)]), num_rows="dynamic", key="f3_chem")
+    st.markdown("**8.2 Microbiological Specifications**")
+    micro_table = st.data_editor(pd.DataFrame([{"Test / Parameter":"","Specification":"","Test Method":""} for _ in range(3)]), num_rows="dynamic", key="f3_micro")
+
+    docs3 = st.file_uploader("Upload supporting docs: Halaal cert, Kosher cert, Spec sheets, Test methods", accept_multiple_files=True, key="f3_docs")
+
+    if st.form_submit_button("✅ Submit Product Information Form - FINAL"):
+        st.success(f"Form 3 M-PRO-00854 submitted for {supp_prod_name}! All 3 forms complete!")
+        st.balloons()
+        st.markdown("### 🎉 Supplier Onboarding 100% Complete")
+        st.progress(100, text="100% - Approved Supplier Pending Review")
