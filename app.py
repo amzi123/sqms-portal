@@ -67,32 +67,27 @@ else: # Supplier
     if country_filter and "origin_country" in df.columns:
         filtered = filtered[filtered["origin_country"].isin(country_filter)]
 
-    # FIXED: No df.style — this was causing AttributeError at line 36
-    st.dataframe(filtered, width='stretch', height=450)
-    
-    # Compliance metrics
-    if "percent_rating" in df.columns:
- c1,c2,c3 = st.columns(3)
- c1.metric("Avg Compliance", f"{filtered['percent_rating'].mean():.0f}%" if len(filtered) else "0%")
+               c1, c2, c3 = st.columns(3)
+    c1.metric("Avg Compliance", f"{filtered['percent_rating'].mean():.0f}%" if len(filtered) else "0%")
     if "status" in df.columns:
         c2.metric("Approved", len(filtered[filtered["status"]=="Approved"]) if "status" in filtered.columns else 0)
         c3.metric("Pending", len(filtered[filtered["status"]=="Pending"]) if "status" in filtered.columns else 0)
+
 else:
     st.subheader("Supplier Document Upload - Secure")
 
     if HAS_SECRETS:
         st.info("Enter your authorized work email (linked to your company)")
-        email = st.text_input("Work Email").strip().lower()
-        
-        matched_supplier = None
-        if email:
-            # Find which supplier this email belongs to
-            for key, secret_email in SECRETS.items():
-                if secret_email.lower() == email:
-                    # Find real supplier name containing that key
-                    for real in df["supplier_distributor"].unique():
-                        if key.lower() in real.lower() or (key=="cjp" and "cjp" in real.lower()) or (key=="teubes" and "teube" in real.lower()) or (key=="savannah" and "savannah" in real.lower()):
-                            matched_supplier = real
+
+    email = st.text_input("Work Email").strip().lower()
+
+    matched_supplier = None
+    if email:
+        # Find which supplier this email belongs to
+        for key, secret_email in SECRETS.items():
+            if secret_email.lower() == email:
+                # Find real supplier name containing that key
+                for real in df["supplier_distributor"].unique():
                             break
             if not matched_supplier:
                 st.error("Email not authorized. Contact SQMS Admin.")
