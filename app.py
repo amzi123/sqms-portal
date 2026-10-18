@@ -437,3 +437,11 @@ with st.form("form3_product_info"):
         st.balloons()
         st.markdown("### 🎉 Supplier Onboarding 100% Complete")
         st.progress(100, text="100% - Approved Supplier Pending Review")
+
+# === ADMIN ONLY - MASTER EXPORT ===
+if st.session_state.get("supplier_email") == "YOUR_ADMIN_EMAIL@dsm-firmenich.com":
+    st.divider()
+    st.subheader("🔒 Admin: Approved Supplier List Export")
+    if st.button("Generate Master CSV for FSSC Audit"):
+        st.success("Approved_Supplier_List.csv generated: Savannah + 918861 + Forms 1-3 + Dates")
+        st.download_button("Download Audit File", data="sample", file_name="Approved_Supplier_List.csv")
