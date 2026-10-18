@@ -37,6 +37,23 @@ except:
 # --- 1. SQMS ADMIN VIEW (Sees All) ---
 if role == "SQMS Admin (All)":
     st.subheader(f"SQMS Dashboard - {len(df)} Raw Materials")
+
+# --- 2. SUPPLIER VIEW (Sees Only Their RMs) - Line 40ish ---
+else: # Supplier
+    st.subheader(f"Welcome {supplier_name}")
+    st.caption(f"{supplier_company} - {len(supplier_df)} RM(s) assigned to you")
+    
+    # Progress tracker - ADD THIS HERE
+    st.markdown("### 📊 Your Onboarding Progress")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Form 1", "✅ Done", "M-PRO-01697")
+    col2.metric("Form 2", "✅ Done", "M-PRO-02591")
+    col3.metric("Form 3", "✅ Done", "M-PRO-00854")
+    st.progress(100, text="100% Complete")
+    st.divider()
+    
+    # Then your RM dropdown + Forms 1,2,3
+
     
     col1, col2 = st.columns(2)
     with col1:
