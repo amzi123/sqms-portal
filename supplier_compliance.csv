@@ -1,3 +1,4 @@
-supplier_code,supplier_name,manual_status,total_docs,auto_status
-PREM-001,"Premier Packaging SA",Approved,2,Approved
-CAPE-002,"Cape Dairy Supplies",Conditional,1,Conditional
+rm_code,rm_description,origin_country,kosher_status,halaal_status,food_safety_cert_status,spec_tds,msds,vaccp_questionnaire,taccp_questionnaire,percent_rating,status
+918861,CAFFEINE ANHYDROUS,IN,Yes,Yes,Yes,Yes,Yes,Yes,Yes,100,Approved
+984028,SUCRALOSE,CN,Pending,Pending,Pending,Pending,Pending,Pending,Pending,0,Pending
+939549,MONOPROPYLENE GLYCOL,KR,Pending,Pending,Pending,Pending,Pending,Pending,Pending,0,Pending
