@@ -1,5 +1,5 @@
 rm_code,material_category,rm_description,supplier_distributor,manufacturer,material_subcat,vendor_code,origin_country,mfg_code,kosher_status,halaal_status,food_safety_cert_status,spec_tds,msds,vaccp_questionnaire,taccp_questionnaire,percent_rating,status
 918861,Brown Notes & Tea,CAFFEINE ANHYDROUS,Savannah Fine Chemical (Pty) Ltd,AARTI INDUSTRIES LTD,Coffee,328628,IN,327264,Yes,Yes,Yes,Yes,Yes,Yes,Yes,100,Approved
-984028,Sweetgoods & Special,SUCRALOSE,Savannah Fine Chemical (Pty) Ltd,ANHUI JINHE INDUSTRIAL CO.,LTD,Sweeteners,328628,CN,308028,Pending,Pending,Pending,Pending,Pending,Pending,Pending,0,Pending
-918861,Brown Notes & Tea,CAFFEINE ANHYDROUS,Savannah Fine Chemical (Pty) Ltd,HEBEI GUANGXIANG PHARMACEUTICAL CO.,Coffee,328628,CN,310218,Pending,Pending,Pending,Pending,Pending,Pending,Pending,0,Pending
-939549,Commodity Chemicals,MONOPROPYLENE GLYCOL,Savannah Fine Chemical (Pty) Ltd,SK PICGLOBAL CO., LTD,Glycols,328628,KR,328330,Pending,Pending,Pending,Pending,Pending,Pending,Pending,0,Pending
+984028,Sweetgoods & Special,SUCRALOSE,Savannah Fine Chemical (Pty) Ltd,ANHUI JINHE INDUSTRIAL CO LTD,Sweeteners,328628,CN,308028,Pending,Pending,Pending,Pending,Pending,Pending,Pending,0,Pending
+918861,Brown Notes & Tea,CAFFEINE ANHYDROUS,Savannah Fine Chemical (Pty) Ltd,HEBEI GUANGXIANG PHARMACEUTICAL CO,Coffee,328628,CN,310218,Pending,Pending,Pending,Pending,Pending,Pending,Pending,0,Pending
+939549,Commodity Chemicals,MONOPROPYLENE GLYCOL,Savannah Fine Chemical (Pty) Ltd,SK PICGLOBAL CO LTD,Glycols,328628,KR,328330,Pending,Pending,Pending,Pending,Pending,Pending,Pending,0,Pending
