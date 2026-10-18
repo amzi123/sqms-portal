@@ -170,6 +170,123 @@ with st.form("form1"):
 
     docs = st.file_uploader("Upload supporting Management System Document(s) / Certificate", accept_multiple_files=True)
 
+    # === FORM 2: TACCP SUPPLIER QUESTIONNAIRE M-PRO-02591 ===
+st.divider()
+st.subheader("🛡️ Form 2: TACCP Supplier Questionnaire (M-PRO-02591)")
+st.caption("Document: M-PRO-02591 | Version 1 | Approved: 24 June 2024 | Internal")
+
+with st.form("form2_taccp"):
+    st.markdown("**Supplier Information**")
+    c1, c2 = st.columns(2)
+    with c1:
+        supplier_name2 = st.text_input("Supplier", key="f2_supplier")
+        products_supplied = st.text_input("List of products supplied", key="f2_products")
+        tech_contact = st.text_input("Supplier technical contact person", key="f2_tech")
+        designation1 = st.text_input("Designation", key="f2_des1")
+        tel = st.text_input("Telephone number", key="f2_tel")
+    with c2:
+        cell = st.text_input("Cell phone number", key="f2_cell")
+        biz_addr = st.text_area("Business address", key="f2_biz")
+        postal_addr = st.text_area("Postal address", key="f2_postal")
+        email2 = st.text_input("Email address", key="f2_email")
+
+    st.info("The supplier signature on this document certifies that:\n\na) Product complies with relevant national legislation and country of origin\nb) Information is accurate and true\nc) Supplier will immediately inform dsm-firmenich in writing if aware of potential adulteration")
+
+    st.markdown("**Signatory**")
+    c3, c4 = st.columns(2)
+    with c3:
+        sig_name = st.text_input("Name", key="f2_signame")
+        sig_desig = st.text_input("Designation (signatory)", key="f2_sigdes")
+    with c4:
+        sig_sig = st.text_input("Signature (type full name)", key="f2_sigsig")
+        sig_date = st.date_input("Date", key="f2_sigdate")
+
+    st.markdown("**1. Manufacturer and country of origin**")
+    st.caption("Add products you supply")
+    prod_data = st.data_editor(
+        pd.DataFrame([{"Product":"","Manufacturer":"","Country of origin":""} for _ in range(5)]),
+        num_rows="dynamic", key="f2_prod_table"
+    )
+
+    st.markdown("### 2. Food defence self-assessment")
+    st.caption("A separate assessment must be done for each manufacturing site and warehouse")
+
+    def yes_no_radio(label, key):
+        return st.radio(label, ["Yes","No","N/A"], index=None, key=key, horizontal=True)
+
+    st.markdown("**Food defence plan**")
+    fd1 = yes_no_radio("Is a designated site security team appointed to implement and oversee the security and food defence plan?", "fd1")
+    fd2 = yes_no_radio("Are annual security and food defence audits conducted?", "fd2")
+    fd3 = yes_no_radio("Is the site security and food defence plan reviewed at a minimum annually?", "fd3")
+    fd4 = yes_no_radio("Is the site security and food defence plan treated as proprietary company information?", "fd4")
+    fd5 = yes_no_radio("Are key contact information reviewed and updated annually?", "fd5")
+    fd6 = yes_no_radio("Are procedures in place to control access during an emergency to authorised personnel only?", "fd6")
+    fd7 = yes_no_radio("Are procedures for responding to threats of product tampering included in the food defence plan?", "fd7")
+    fd8 = yes_no_radio("Are procedures for responding to actual incidents of product tampering detailed in the plan?", "fd8")
+    fd9 = yes_no_radio("Are employees encouraged to report signs of possible product tampering?", "fd9")
+    fd10 = yes_no_radio("Does the facility have a documented recall plan?", "fd10")
+
+    st.markdown("**Physical security and security procedures**")
+    ps1 = yes_no_radio("Are the grounds groomed and well maintained with clear lines of sight?", "ps1")
+    ps2 = yes_no_radio("Are the facility’s exterior areas monitored for signs of suspicious activity or entry?", "ps2")
+    ps3 = yes_no_radio("Is there sufficient outside lighting to allow detection of unusual activities during non-daylight hours?", "ps3")
+    ps4 = yes_no_radio("Do emergency exits have self-closing doors or alarms?", "ps4")
+    ps5 = yes_no_radio("Are all non-employees (e.g. contractors) registered upon entry?", "ps5")
+    ps6 = yes_no_radio("Is positive identification required for outside vendors and delivery personnel before granting access?", "ps6")
+    st.markdown("*Are the following always secured with locks, seals or sensors to prevent entry by unauthorized persons?*")
+    ps6a = yes_no_radio("Outside doors and gates", "ps6a")
+    ps6b = yes_no_radio("Windows", "ps6b")
+    ps6c = yes_no_radio("Roof openings", "ps6c")
+    ps6d = yes_no_radio("Vents", "ps6d")
+    ps6e = yes_no_radio("Trailers and containers", "ps6e")
+    ps6f = yes_no_radio("Utility areas", "ps6f")
+    ps6g = yes_no_radio("Storage areas", "ps6g")
+    ps7 = yes_no_radio("Is there emergency lighting within the facility?", "ps7")
+    ps8 = yes_no_radio("Is active surveillance maintained through CCTV?", "ps8")
+    ps9 = yes_no_radio("Are emergency systems tested periodically?", "ps9")
+    ps10 = yes_no_radio("Are the locations of controls for emergency systems clearly marked?", "ps10")
+    ps11 = yes_no_radio("Is access to sensitive storage, manufacturing areas restricted and controlled?", "ps11")
+    ps12 = yes_no_radio("Are visitors restricted to non-production areas unless accompanied?", "ps12")
+    ps13 = yes_no_radio("Are procedures in place to routinely check ablution facilities, lockers, storage areas for concealed people/packages?", "ps13")
+    ps14 = yes_no_radio("Is a regular inventory of facility keys conducted?", "ps14")
+    st.markdown("*Are the central controls for the following restricted?*")
+    ps15a = yes_no_radio("Water", "ps15a")
+    ps15b = yes_no_radio("Electricity", "ps15b")
+    ps15c = yes_no_radio("CIP systems and storage tanks", "ps15c")
+    ps15d = yes_no_radio("Heating, ventilation and air conditioning", "ps15d")
+
+    st.markdown("**Personnel security procedures**")
+    pe1 = yes_no_radio("Are background checks conducted on prospective employees prior to hiring?", "pe1")
+    pe2 = yes_no_radio("Are background checks required on contract employees?", "pe2")
+    pe3 = yes_no_radio("Do employees receive training on security procedures as part of orientation?", "pe3")
+    pe4 = yes_no_radio("Does facility have a policy regarding items employees/visitors may bring (e.g. cameras)?", "pe4")
+    pe5 = yes_no_radio("Are employees instructed on protocol for handling and reporting tampering, illness or other threats?", "pe5")
+
+    st.markdown("**Production and storage**")
+    pr1 = yes_no_radio("Is mixing/batching where large amounts of exposed product handled, continuously monitored?", "pr1")
+    pr2 = yes_no_radio("Are lines that handle and transfer products monitored to ensure integrity?", "pr2")
+    pr3 = yes_no_radio("Is packaging integrity of ingredients examined for tampering before use?", "pr3")
+    pr4 = yes_no_radio("Are records maintained to trace back raw materials to suppliers?", "pr4")
+    pr5 = yes_no_radio("Are records maintained to trace forward finished production to customers?", "pr5")
+    pr6 = yes_no_radio("Are periodic security inspections conducted on production and storage facilities?", "pr6")
+    pr7 = yes_no_radio("Are records maintained on facility security inspections?", "pr7")
+    pr8 = yes_no_radio("Are product labels and packaging held in secure area to prevent theft/misuse?", "pr8")
+    pr9 = yes_no_radio("Is inventory of finished products checked for unexplained additions/withdrawals?", "pr9")
+    pr10 = yes_no_radio("Is access to inside/outside storage areas for hazardous materials restricted to designated employees?", "pr10")
+
+    st.markdown("**Shipping and receiving**")
+    sh1 = yes_no_radio("Are deliveries monitored and controlled?", "sh1")
+    sh2 = yes_no_radio("Are outgoing shipments sealed with tamper evident seals?", "sh2")
+    sh3 = yes_no_radio("Are seal numbers documented on shipping documents?", "sh3")
+    sh4 = yes_no_radio("Are incoming delivery trucks inspected for unusual cargo/activity?", "sh4")
+    sh5 = yes_no_radio("Are drivers’ identities verified against valid driver’s license?", "sh5")
+    sh6 = yes_no_radio("Is access to loading docks controlled to avoid unauthorised access?", "sh6")
+    sh7 = yes_no_radio("Are suspicious alterations in shipping documents immediately investigated?", "sh7")
+
+    if st.form_submit_button("✅ Submit TACCP Form"):
+        st.success(f"TACCP Form M-PRO-02591 submitted for {supplier_name2}!")
+        st.balloons()
+
     if st.form_submit_button("✅ Submit Assessment Form"):
         st.success(f"Thank you {name} from {company} - Form M-PRO-01697 submitted! You may not need a physical audit.")
         st.balloons()
