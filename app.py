@@ -1,84 +1,89 @@
 import streamlit as st
 import pandas as pd
-import os
-from datetime import datetime
+import mysql.connector
 
-st.set_page_config(page_title="SQMS Portal - Food Safety", layout="wide")
+st.set_page_config(page_title="SQMS Portal", layout="wide")
+st.title("📤 Supplier Document Portal - Food Safety")
 
-# REAL FOOD SAFETY DOCS
-REQUIRED_DOCS=["FSSC 22000 Certificate","Kosher Certificate","Halal Certificate","TDS / Product Spec","COA","Allergen Statement"]
+# --- CONNECT TO YOUR CLEAN MYSQL TABLE ---
+def get_connection():
+    return mysql.connector.connect(
+        host=st.secrets["mysql"]["host"],
+        user=st.secrets["mysql"]["user"],
+        password=st.secrets["mysql"]["password"],
+        database=st.secrets["mysql"]["database"]
+    )
 
-os.makedirs("uploads",exist_ok=True)
-UPLOAD_LOG="uploads_log.csv"
+# --- SIDEBAR - ROLE SELECTOR (from your screenshot) ---
+role = st.sidebar.selectbox("You are:", ["Director View", "Supplier Upload"])
 
-if os.path.exists(UPLOAD_LOG):
-    log_df=pd.read_csv(UPLOAD_LOG)
-else:
-    log_df=pd.DataFrame(columns=["Supplier","Document Type","File Name","Upload Date"])
-
-try:
-    df=pd.read_csv("SQMS_data.csv")
-except:
+if role == "Director View":
     try:
-        df=pd.read_csv("supplier_compliance.csv")
-    except:
-        df=pd.DataFrame({"Supplier":["Supplier A","Supplier B","Supplier C"],"Compliance Score":[85,60,92],"Status":["Approved","Pending","Approved"],"Last Audit":["2025-01-15","2024-11-20","2025-03-10"]})
+        conn = get_connection()
+        df = pd.read_sql("SELECT rm_code, rm_description, origin_country, kosher_status, halaal_status, food_safety_cert_status, spec_tds, msds, vaccp_questionnaire, taccp_questionnaire, percent_rating, status FROM supplier_master_list", conn)
+        st.subheader(f"Director Dashboard - {len(df)} Suppliers")
+        
+        # Color coding like Excel
+        def color_rating(val):
+            if val == 100: return 'background-color: #c6efce' # Green
+            elif val > 0: return 'background-color: #ffeb9c' # Yellow
+            else: return 'background-color: #ffc7ce' # Red
+        st.dataframe(df.style.applymap(color_rating, subset=['percent_rating']), use_container_width=True)
+        
+        st.metric("Average Compliance", f"{df['percent_rating'].mean():.1f}%")
+    except Exception as e:
+        st.error(f"MySQL not connected yet. Add Secrets in Streamlit Cloud. Error: {e}")
+        st.info("Go to Streamlit Cloud > App > Settings > Secrets and add your MySQL details")
 
-suppliers_list=df['Supplier'].unique().tolist()
-st.sidebar.title("SQMS Portal")
-role=st.sidebar.selectbox("You are:",["Supplier Upload","Admin Dashboard"])
+else: # Supplier Upload - THIS IS YOUR SCREENSHOT
+    st.write("Upload: FSSC 22000, Kosher, Halal, TDS/Spec, COA, Allergen Statement")
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT id, rm_code, rm_description FROM supplier_master_list")
+        suppliers = cursor.fetchall()
+        
+        supplier_options = {f"{s['rm_code']} - {s['rm_description']}": s['id'] for s in suppliers}
+        
+        selected_name = st.selectbox("Select your Supplier Name", list(supplier_options.keys()))
+        selected_id = supplier_options[selected_name]
 
-if role=="Supplier Upload":
-    st.title("📤 Supplier Document Portal - Food Safety")
-    st.caption("Upload: FSSC 22000, Kosher, Halal, TDS/Spec, COA, Allergen Statement")
-    supplier_name=st.selectbox("Select your Supplier Name",suppliers_list)
-    doc_type=st.selectbox("Document Type",REQUIRED_DOCS)
-    uploaded_file=st.file_uploader(f"Upload {doc_type}",type=["pdf","jpg","png","docx","xlsx"])
-    submit=st.button("Submit Document")
-    if uploaded_file and submit:
-        save_name=f"{supplier_name}_{doc_type}_{uploaded_file.name}"
-        save_path=os.path.join("uploads",save_name)
-        with open(save_path,"wb") as f:
-            f.write(uploaded_file.getbuffer())
-        new_row=pd.DataFrame([{"Supplier":supplier_name,"Document Type":doc_type,"File Name":save_name,"Upload Date":datetime.now().strftime("%Y-%m-%d %H:%M")}])
-        log_df=pd.concat([log_df,new_row],ignore_index=True)
-        log_df.to_csv(UPLOAD_LOG,index=False)
-        st.success(f"✅ {doc_type} uploaded for {supplier_name}!")
-        st.balloons()
-    st.subheader(f"Your uploads: {supplier_name}")
-    my_uploads=log_df[log_df["Supplier"]==supplier_name]
-    if not my_uploads.empty:
-        st.dataframe(my_uploads, use_container_width=True)
-    else:
-        st.warning("No documents uploaded yet.")
+        doc_map = {
+            "FSSC 22000 Certificate": "food_safety_cert_status",
+            "Kosher Certificate": "kosher_status",
+            "Halal Certificate": "halaal_status",
+            "TDS/Spec": "spec_tds",
+            "MSDS": "msds",
+            "VACCP Questionnaire": "vaccp_questionnaire",
+            "TACCP Questionnaire": "taccp_questionnaire",
+            "Allergen Declaration": "allergen_declaration"
+        }
+        
+        doc_type = st.selectbox("Document Type", list(doc_map.keys()))
+        uploaded_file = st.file_uploader(f"Upload {doc_type}", type=["pdf","jpg","png","docx","xlsx"])
 
-else:
-    st.title("📊 SQMS Admin - Food Safety Compliance")
-    st.subheader("1. Supplier Master Records")
-    md_table="| Supplier | Score | Status | Last Audit |\n|---|---|---|---|\n"
-    for _,row in df.iterrows():
-        md_table+=f"| {row['Supplier']} | {row['Compliance Score']} | {row['Status']} | {row['Last Audit']} |\n"
-    st.markdown(md_table)
-    st.divider()
-    st.subheader("2. Document Compliance - Food Safety Docs")
-    st.write("✅ = Uploaded | ❌ = Missing | Tracking: FSSC 22000, Kosher, Halal, TDS/Spec, COA, Allergen")
-    if log_df.empty:
-        compliance_matrix=pd.DataFrame(0,index=suppliers_list,columns=REQUIRED_DOCS)
-    else:
-        compliance_matrix=pd.DataFrame(0,index=suppliers_list,columns=REQUIRED_DOCS)
-        for _,r in log_df.iterrows():
-            if r["Supplier"] in compliance_matrix.index and r["Document Type"] in compliance_matrix.columns:
-                compliance_matrix.loc[r["Supplier"],r["Document Type"]]=1
-    emoji_df=compliance_matrix.apply(lambda col: col.map({1: "✅", 0: "❌"}))
-    st.dataframe(emoji_df,use_container_width=True)
-    st.subheader("3. Compliance % per Supplier")
-    temp=compliance_matrix.copy()
-    temp["Uploaded"]=temp[REQUIRED_DOCS].sum(axis=1)
-    temp["% Complete"]=(temp["Uploaded"]/len(REQUIRED_DOCS)*100).astype(int)
-    st.bar_chart(temp["% Complete"])
-    st.divider()
-    st.subheader("4. All Uploaded Files - Audit Log")
-    if not log_df.empty:
-        st.dataframe(log_df.sort_values("Upload Date",ascending=False),use_container_width=True)
-    else:
-        st.info("No uploads yet - Suppliers need to upload FSSC, Kosher, Halal, etc.")
+        if st.button("Submit Document"):
+            if uploaded_file:
+                col = doc_map[doc_type]
+                cursor.execute(f"UPDATE supplier_master_list SET {col}='Yes' WHERE id=%s", (selected_id,))
+                # Recalculate rating
+                cursor.execute("""
+                UPDATE supplier_master_list SET percent_rating = ROUND((
+                (kosher_status='Yes')+(halaal_status='Yes')+(food_safety_cert_status='Yes')+
+                (spec_tds='Yes')+(msds='Yes')+(vaccp_questionnaire='Yes')+(taccp_questionnaire='Yes')+
+                (allergen_declaration='Yes'))/26*100) WHERE id=%s
+                """, (selected_id,))
+                conn.commit()
+                st.success(f"✅ {doc_type} saved as Yes for {selected_name}!")
+                st.balloons()
+            else:
+                st.warning("Please upload a file first")
+
+        # Show my uploads
+        cursor.execute("SELECT * FROM supplier_master_list WHERE id=%s", (selected_id,))
+        my_data = cursor.fetchone()
+        st.subheader(f"Your uploads: {selected_name}")
+        st.write(my_data)
+        
+    except Exception as e:
+        st.error(f"Connect MySQL first in Secrets: {e}")
