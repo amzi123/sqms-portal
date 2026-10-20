@@ -5,7 +5,7 @@ st.set_page_config(page_title="SQMS Portal", layout="wide")
 st.markdown("""
 <style>
 .stApp { background-color: #0e2f4f; }
-h1, h2, h3, p, label { color: #e8f1f8 !important; }
+h1, h2, h3, p, label, div[data-testid="stCaptionContainer"] { color: #e8f1f8 !important; }
 div[data-testid="stMetric"] { background-color: #14395e; border: 1px solid #1e4a73; padding: 15px; border-radius: 12px; }
 div[data-testid="stMetricValue"] { color: #2ee5c8 !important; }
 </style>
@@ -25,121 +25,261 @@ priority = ["supplier_distributor","manufacturer","rm_code","rm_description","or
 other_cols = [c for c in df.columns if c not in priority]
 ordered = [c for c in priority if c in df.columns] + other_cols
 
-# UNIQUE KEY FIXES DUPLICATE ERROR
-role = st.sidebar.selectbox("Login as:", ["SQMS Admin (All)", "Supplier (My RMs Only)"], key="role_login_unique")
+role = st.sidebar.selectbox("Login as:", ["SQMS Admin (All)", "Supplier (My RMs Only)"], key="role_final_complete")
 st.sidebar.metric("Total RMs", len(df))
-
-try:
-    SECRETS = st.secrets.get("supplier_logins", {})
-    HAS_SECRETS = len(SECRETS) > 0
-except:
-    HAS_SECRETS = False
-    SECRETS = {}
 
 if role == "SQMS Admin (All)":
     st.subheader(f"SQMS Dashboard - {len(df)} Raw Materials")
-    c1, c2 = st.columns(2)
-    with c1:
-        sup_filter = st.multiselect("Filter Supplier", df["supplier_distributor"].unique(), key="admin_sup_filter")
-    with c2:
-        country_filter = st.multiselect("Filter Country", df["origin_country"].unique() if "origin_country" in df.columns else [], key="admin_country_filter")
+    sup_filter = st.multiselect("Filter Supplier", df["supplier_distributor"].unique(), key="sup_f_complete")
     filtered = df[ordered].copy()
     if sup_filter:
         filtered = filtered[filtered["supplier_distributor"].isin(sup_filter)]
-    if country_filter and "origin_country" in df.columns:
-        filtered = filtered[filtered["origin_country"].isin(country_filter)]
     st.dataframe(filtered, width='stretch', height=450)
 else:
-    st.subheader("Supplier Document Upload - Secure")
-    if HAS_SECRETS:
-        email = st.text_input("Work Email", key="supplier_email_unique").strip().lower()
-        matched_supplier = None
-        if email:
-            for k, v in SECRETS.items():
-                if v.lower() == email:
-                    for real in df["supplier_distributor"].unique():
-                        if k.lower() in real.lower():
-                            matched_supplier = real
-                            break
-    else:
-        st.warning("TEST MODE")
-        matched_supplier = st.selectbox("Select Supplier (TEST)", df["supplier_distributor"].unique(), key="test_supplier_unique")
-    if 'matched_supplier' in locals() and matched_supplier:
-        my_rms = df[df["supplier_distributor"] == matched_supplier]
-        st.success(f"Welcome {matched_supplier} — {len(my_rms)} RM(s)")
-        st.dataframe(my_rms[ordered], width='stretch')
+    st.subheader("Supplier Document Upload")
+    matched_supplier = st.selectbox("Select Supplier (TEST)", df["supplier_distributor"].unique(), key="test_sup_complete")
+    my_rms = df[df["supplier_distributor"] == matched_supplier]
+    st.success(f"Welcome {matched_supplier} — {len(my_rms)} RM(s)")
+    st.dataframe(my_rms[ordered], width='stretch')
+
+def q(label, key):
+    return st.radio(label, ["Yes","No","N/A"], index=None, key=key, horizontal=True)
 
 # === FORM 1 ===
 st.divider()
 st.subheader("📋 Form 1: Supplier Assessment Form (M-PRO-01697)")
 st.caption("Document: M-PRO-01697 | Version 1 | Approved: 05 May 2025")
-with st.form("form1_final_unique"):
+with st.form("form1_complete"):
     c1,c2,c3,c4 = st.columns(4)
-    c1.radio("FSSC 22000", ["No","Yes"], key="fssc1")
-    c2.radio("HACCP", ["No","Yes"], key="haccp1")
-    c3.radio("ISO 22000", ["No","Yes"], key="iso22000_1")
-    c4.radio("BRC", ["No","Yes"], key="brc1")
+    c1.radio("FSSC 22000", ["No","Yes"], key="fssc_c")
+    c2.radio("HACCP", ["No","Yes"], key="haccp_c")
+    c3.radio("ISO 22000", ["No","Yes"], key="iso_c")
+    c4.radio("BRC", ["No","Yes"], key="brc_c")
     c5,c6,c7 = st.columns(3)
-    c5.radio("FSA", ["No","Yes"], key="fsa1")
-    c6.radio("IFS", ["No","Yes"], key="ifs1")
-    c7.radio("ISO 9001", ["No","Yes"], key="iso9001_1")
-    st.text_input("Any other certification? State name", key="other_cert1")
-    st.text_input("Which certification body and registration Number(s)?", key="cert_body1")
-    st.multiselect("Criteria covered in Management System", ["Management Responsibility","Document and Data Control","Control of Customer Supplied Product","Product Identification and Traceability","Purchasing","HACCP system","GMP (TS 22002-1)","Process Control","Inspection and Testing","Control of Inspection, Measuring and Testing Equipment","Inspection and Test Status","Control of Non-Conforming Product","Corrective and Preventive Action","Handling, Storage, Packaging, Preservation and Delivery","Control of Records","Internal Audits","Training"], key="criteria1")
-    st.radio("Intention to implement formal System?", ["N/A - We have certification","Yes","No"], key="intention1")
-    st.date_input("Expected date of implementation", value=None, key="impl_date1")
-    st.text_area("Description of controls", key="controls1")
-    st.multiselect("Controls Exercised", ["Management Planning / Review","Raw Materials Inspection and Testing","Process Control Checks","Product / Project Approval","Planned / Preventive Maintenance","Work Instructions","Training Plan","Supplier Assessment"], key="formal_controls1")
-    st.text_area("Other:", key="other1")
+    c5.radio("FSA", ["No","Yes"], key="fsa_c")
+    c6.radio("IFS", ["No","Yes"], key="ifs_c")
+    c7.radio("ISO 9001", ["No","Yes"], key="iso_c2")
+    st.text_input("Any other certification? State name", key="other_cert_c")
+    st.text_input("Which certification body and registration Number(s)?", key="cert_body_c")
+    st.multiselect("Criteria covered in Management System", ["Management Responsibility","Document and Data Control","Control of Customer Supplied Product","Product Identification and Traceability","Purchasing","HACCP system","GMP (TS 22002-1)","Process Control","Inspection and Testing","Control of Inspection, Measuring and Testing Equipment","Inspection and Test Status","Control of Non-Conforming Product","Corrective and Preventive Action","Handling, Storage, Packaging, Preservation and Delivery","Control of Records","Internal Audits","Training"], key="crit_c")
+    st.radio("Intention to implement formal System?", ["N/A - We have certification","Yes","No"], key="intent_c")
+    st.date_input("Expected date of implementation", value=None, key="impl_c")
+    st.text_area("Detailed description of controls to guarantee Quality and Food Safety", key="ctrl_c")
+    st.multiselect("Controls Exercised", ["Management Planning / Review","Raw Materials Inspection and Testing","Process Control Checks","Product / Project Approval (before Despatch)","Planned / Preventive Maintenance","Work Instructions in Place where Relevant","Training Plan","Supplier Assessment (Incl. Transport)"], key="ctrls_c")
+    st.text_area("Other:", key="other_c")
     col1,col2 = st.columns(2)
     with col1:
-        st.text_input("Title", key="title1")
-        st.text_input("Position", key="pos1")
-        st.text_input("Company", key="comp1")
+        st.text_input("Title", key="title_c")
+        st.text_input("Position", key="pos_c")
+        st.text_input("Company", key="comp_c")
     with col2:
-        st.text_input("Name", key="name1")
-        st.text_input("Signature", key="sig1")
-        st.date_input("Date", key="date1")
-    st.file_uploader("Upload supporting docs", accept_multiple_files=True, key="docs1")
+        st.text_input("Name", key="name_c")
+        st.text_input("Signature (type full name)", key="sig_c")
+        st.date_input("Date", key="date_c")
+    st.file_uploader("Upload supporting Management System Document(s) / Certificate", accept_multiple_files=True, key="docs_c")
     st.form_submit_button("✅ Submit Assessment Form M-PRO-01697")
 
-# === FORM 2 ===
+# === FORM 2 FULL ===
 st.divider()
 st.subheader("🛡️ Form 2: TACCP Supplier Questionnaire (M-PRO-02591)")
-st.caption("Document: M-PRO-02591 | Version 1 | Approved: 24 June 2024")
-with st.form("form2_final_unique"):
-    st.text_input("Supplier", key="f2_supplier_final")
-    st.text_input("List of products supplied", key="f2_products_final")
-    st.text_input("Technical contact", key="f2_tech_final")
-    st.text_input("Designation", key="f2_des1_final")
-    st.text_input("Telephone", key="f2_tel_final")
-    st.text_input("Cell", key="f2_cell_final")
-    st.text_area("Business address", key="f2_biz_final")
-    st.text_area("Postal address", key="f2_postal_final")
-    st.text_input("Email", key="f2_email_final")
-    st.text_input("Name (Signatory)", key="f2_signame_final")
-    st.text_input("Designation (signatory)", key="f2_sigdes_final")
-    st.text_input("Signature", key="f2_sigsig_final")
-    st.date_input("Date", key="f2_sigdate_final")
-    st.data_editor(pd.DataFrame([{"Product":"","Manufacturer":"","Country of origin":""} for _ in range(5)]), num_rows="dynamic", key="f2_prod_table_final")
-    def yes_no_radio(label, key):
-        return st.radio(label, ["Yes","No","N/A"], index=None, key=key, horizontal=True)
-    yes_no_radio("Is a designated site security team appointed?", "fd1_final")
-    yes_no_radio("Are annual security audits conducted?", "fd2_final")
-    yes_no_radio("Is plan reviewed annually?", "fd3_final")
-    yes_no_radio("Does facility have documented recall plan?", "fd10_final")
+st.caption("Document: M-PRO-02591 | Version 1 | Approved: 24 June 2024 | From your uploaded DOCX")
+with st.form("form2_complete"):
+    st.markdown("**Supplier Information**")
+    st.text_input("Supplier", key="f2_sup_c")
+    st.text_input("List of products supplied", key="f2_prod_c")
+    st.text_input("Supplier technical contact person", key="f2_tech_c")
+    st.text_input("Designation", key="f2_des_c")
+    st.text_input("Telephone number", key="f2_tel_c")
+    st.text_input("Cell phone number", key="f2_cell_c")
+    st.text_area("Business address", key="f2_biz_c")
+    st.text_area("Postal address", key="f2_post_c")
+    st.text_input("Email address", key="f2_email_c")
+    st.info("Certifies: Product complies with national legislation, info accurate, will inform Firmenich of adulteration")
+    st.text_input("Name (Signatory)", key="f2_signame_c")
+    st.text_input("Designation (signatory)", key="f2_sigdes_c")
+    st.text_input("Signature", key="f2_sigsig_c")
+    st.date_input("Date", key="f2_sigdate_c")
+    st.markdown("**1. Manufacturer and country of origin**")
+    st.data_editor(pd.DataFrame([{"Product":"","Manufacturer":"","Country of origin":""} for _ in range(5)]), num_rows="dynamic", key="f2_table_c")
+    st.markdown("### 2. Food defence self-assessment")
+    st.caption("A separate assessment must be done for each manufacturing site and warehouse")
+    st.markdown("**Food defence plan**")
+    q("Is a designated site security team appointed to implement and oversee the security and food defence plan?", "fd1_c")
+    q("Are annual security and food defence audits conducted?", "fd2_c")
+    q("Is the site security and food defence plan reviewed at a minimum annually?", "fd3_c")
+    q("Is the site security and food defence plan treated as proprietary company information?", "fd4_c")
+    q("Are key contact information reviewed and updated annually?", "fd5_c")
+    q("Are procedures in place to control access during an emergency to authorised personnel only?", "fd6_c")
+    q("Are procedures for responding to threats of product tampering included in the food defence plan?", "fd7_c")
+    q("Are procedures for responding to actual incidents of product tampering detailed in the plan?", "fd8_c")
+    q("Are employees encouraged to report signs of possible product tampering?", "fd9_c")
+    q("Does the facility have a documented recall plan?", "fd10_c")
+    st.markdown("**Physical security and security procedures**")
+    q("Are the grounds groomed and well maintained with clear lines of sight?", "ps1_c")
+    q("Are the facility’s exterior areas monitored for signs of suspicious activity or entry?", "ps2_c")
+    q("Is there sufficient outside lighting to allow detection during non-daylight hours?", "ps3_c")
+    q("Do emergency exits have self-closing doors or alarms?", "ps4_c")
+    q("Are all non-employees (e.g. contractors) registered upon entry?", "ps5_c")
+    q("Is positive identification required for outside vendors and delivery personnel before granting access?", "ps6_c")
+    q("Outside doors and gates - secured with locks/seals/sensors?", "ps6a_c")
+    q("Windows - secured?", "ps6b_c")
+    q("Roof openings - secured?", "ps6c_c")
+    q("Vents - secured?", "ps6d_c")
+    q("Trailers and containers - secured?", "ps6e_c")
+    q("Utility areas - secured?", "ps6f_c")
+    q("Storage areas - secured?", "ps6g_c")
+    q("Is there emergency lighting within the facility?", "ps7_c")
+    q("Is active surveillance maintained through CCTV?", "ps8_c")
+    q("Are emergency systems tested periodically?", "ps9_c")
+    q("Are locations of controls for emergency systems clearly marked?", "ps10_c")
+    q("Is access to sensitive storage, manufacturing areas restricted?", "ps11_c")
+    q("Are visitors restricted to non-production areas unless accompanied?", "ps12_c")
+    q("Are procedures in place to routinely check ablution facilities, lockers, storage areas?", "ps13_c")
+    q("Is a regular inventory of facility keys conducted?", "ps14_c")
+    q("Water - central controls restricted?", "ps15a_c")
+    q("Electricity - restricted?", "ps15b_c")
+    q("CIP systems and storage tanks - restricted?", "ps15c_c")
+    q("Heating, ventilation and air conditioning - restricted?", "ps15d_c")
+    st.markdown("**Personnel security procedures**")
+    q("Are background checks conducted on prospective employees prior to hiring?", "pe1_c")
+    q("Are background checks required on contract employees?", "pe2_c")
+    q("Do employees receive training on security procedures as part of orientation?", "pe3_c")
+    q("Does facility have a policy regarding items employees/visitors may bring (e.g. cameras)?", "pe4_c")
+    q("Are employees instructed on protocol for handling and reporting tampering?", "pe5_c")
+    st.markdown("**Production and storage**")
+    q("Is mixing/batching where large amounts of exposed product handled, continuously monitored?", "pr1_c")
+    q("Are lines that handle and transfer products monitored?", "pr2_c")
+    q("Is packaging integrity examined for tampering before use?", "pr3_c")
+    q("Are records maintained to trace back raw materials to suppliers?", "pr4_c")
+    q("Are records maintained to trace forward finished production to customers?", "pr5_c")
+    q("Are periodic security inspections conducted?", "pr6_c")
+    q("Are records maintained on facility security inspections?", "pr7_c")
+    q("Are product labels and packaging held in secure area?", "pr8_c")
+    q("Is inventory of finished products checked for unexplained additions/withdrawals?", "pr9_c")
+    q("Is access to inside/outside storage for hazardous materials restricted?", "pr10_c")
+    q("Are hazardous material storage areas separated from production?", "pr11_c")
+    q("Is a monthly inventory of hazardous materials maintained?", "pr12_c")
+    q("Is a procedure in place to control disposition of hazardous chemicals?", "pr13_c")
+    q("Is access to incoming water lines and water wells restricted?", "pr14_c")
+    q("Are potable water lines periodically inspected for tampering?", "pr15_c")
+    st.markdown("**Shipping and receiving**")
+    q("Are deliveries monitored and controlled?", "sh1_c")
+    q("Are outgoing shipments sealed with tamper evident seals?", "sh2_c")
+    q("Are seal numbers documented?", "sh3_c")
+    q("Are incoming trucks inspected for unusual cargo?", "sh4_c")
+    q("Are drivers’ identities verified?", "sh5_c")
+    q("Is access to loading docks controlled?", "sh6_c")
+    q("Are suspicious alterations in shipping documents investigated?", "sh7_c")
     st.form_submit_button("✅ Submit TACCP Form M-PRO-02591")
 
-# === FORM 3 ===
+# === FORM 3 FULL FROM YOUR DOCX ===
 st.divider()
 st.subheader("📦 Form 3: Product Information Form (M-PRO-00854)")
-st.caption("Document: M-PRO-00854 | Version 1 | Approved: 03 March 2025")
-with st.form("form3_final_unique"):
-    st.text_input("Customer's Product Name", key="f3_cust_name_final")
-    st.text_input("Supplier's Product Name", key="f3_supp_name_final")
-    st.radio("Status", ["Existing Product", "New Product"], key="f3_status_final", horizontal=True)
-    st.text_input("Company Name", key="f3_comp_final")
-    st.text_area("Ingredient Declaration", key="f3_ingred_final")
-    st.text_area("Storage Conditions", key="f3_store_final")
-    st.file_uploader("Upload supporting docs", accept_multiple_files=True, key="f3_docs_final")
+st.caption("Document: M-PRO-00854 | Version 1 | Approved: 03 March 2025 | From your uploaded DOCX")
+with st.form("form3_complete_full"):
+    st.markdown("### 1. PRODUCT & CONTACT DETAILS")
+    c1,c2 = st.columns(2)
+    with c1:
+        st.text_input("Customer's Product Name", key="f3_cust_c")
+        st.text_input("Supplier's Product Name", key="f3_supp_c")
+        st.radio("Status", ["Existing Product", "New Product"], key="f3_status_c", horizontal=True)
+        st.radio("Is the product Food Grade?", ["Yes","No"], key="f3_fg_c", horizontal=True)
+        st.radio("Is the product a Food Additive?", ["Yes","No"], key="f3_fa_c", horizontal=True)
+        st.text_input("INS/E Number", key="f3_ins_c")
+        st.radio("Is this product susceptible to Adulteration?", ["Yes","No"], key="f3_adult_c", horizontal=True)
+    with c2:
+        st.text_input("Customer's Product Code", key="f3_cust_code_c")
+        st.text_input("Supplier's Product Code", key="f3_supp_code_c")
+        st.text_area("If yes, what product can it be adulterated with?", key="f3_adult_what_c")
+        st.text_area("Tests to confirm adulteration + frequency", key="f3_tests_c")
+    st.markdown("**1.1 Supplier Information**")
+    ca, cb = st.columns(2)
+    with ca:
+        st.text_input("Company Name", key="f3_comp1_c")
+        st.text_input("Trading Name", key="f3_trad_c")
+        st.text_area("Business Address", key="f3_biz_c")
+        st.text_area("Postal Address", key="f3_post_c")
+    with cb:
+        st.text_input("Technical Contact Person", key="f3_tech1_c")
+        st.text_input("Position Title", key="f3_pos_c")
+        st.text_input("Phone", key="f3_phone_c")
+        st.text_input("Cell phone (mobile)", key="f3_cell_c")
+        st.text_input("Email", key="f3_email_c")
+    st.markdown("**1.2 Manufacturer(s) if different to supplier**")
+    st.data_editor(pd.DataFrame([{"Company Name":"","Site of Manufacture (City & Country)":""} for _ in range(3)]), num_rows="dynamic", key="f3_manuf_c")
+    st.markdown("**1.4 Supplier Declaration and Warranty**")
+    st.caption("Certifies product complies with SA legislation, info is true, will inform of changes")
+    st.text_input("Company Name (Signed for and on behalf of)", key="f3_decl_comp_c")
+    st.text_input("Name (please print)", key="f3_decl_name_c")
+    st.text_input("Job Title", key="f3_decl_title_c")
+    st.text_input("Authorised Signature", key="f3_decl_sig_c")
+    st.date_input("Date (declaration)", key="f3_decl_date_c")
+    st.divider()
+    st.markdown("### 2. PRODUCT INFORMATION & INGREDIENTS")
+    st.text_area("2.1 Product Description (Physical and technological)", key="f3_desc_c")
+    st.text_area("2.2 Legal Description / Suggested Labelling Description", key="f3_legal_c")
+    st.text_area("2.3 Ingredient Declaration including QUID (full list descending, % characterising)", height=120, key="f3_ingred_c")
+    st.text_area("2.4 Processing Aids (carriers, anti-foam, divider oil, etc.)", key="f3_proc_c")
+    st.markdown("**2.5 Country of Origin**")
+    st.radio("Statement", ["Produce of","Made in","Made in - with Imported Ingredients","Other"], key="f3_origin_c", horizontal=True)
+    st.text_input("Insert Country", key="f3_origin_country_c")
+    st.text_input("Specify % Imported Ingredients", key="f3_imp_pct_c")
+    st.text_input("Specify Country/IES of Imported Ingredients", key="f3_imp_c")
+    st.markdown("**2.6 Component country of origin**")
+    st.data_editor(pd.DataFrame([{"Ingredient":"","Country of origin":""} for _ in range(8)]), num_rows="dynamic", key="f3_comp_origin_c")
+    st.divider()
+    st.markdown("### 3. Allergen & Compositional Information")
+    st.markdown("**3.1 Mandatory Advisory or Warning Statements**")
+    for adv in ["Aspartame","Saccharin","Cyclamate","Glutamates (MSG)","Tartrazine","Phytosterol esters / stanols","Any ingredients irradiated","Herbal and botanical extracts","Isomaltulose","Polyols, Isomalts, Polydextrose"]:
+        st.radio(f"{adv}", ["No","Yes"], key=f"f3_adv_{adv}_c", horizontal=True, index=None)
+    st.markdown("**3.2 Mandatory Declaration of certain substances + Cross Contact**")
+    for aller in ["Cereals containing gluten","Crustacea & crustacea products","Molluscs & mollusc products","Egg & egg products","Fish & fish products","Milk & milk products","Peanuts & peanut products","Soybeans & their products","Tree nuts & their products","Sulphites"]:
+        c1,c2,c3 = st.columns([2,1,1])
+        with c1:
+            st.radio(f"{aller} - Present?", ["No","Yes"], key=f"f3_aller_{aller}_c", horizontal=True, index=None)
+        with c2:
+            st.radio("Same line?", ["No","Yes"], key=f"f3_line_{aller}_c", horizontal=True, index=None)
+        with c3:
+            st.radio("Same facility?", ["No","Yes"], key=f"f3_fac_{aller}_c", horizontal=True, index=None)
+    st.markdown("**3.3 Allergen Cross Contact**")
+    st.radio("Has your company addressed cross contact?", ["Yes","No"], key="f3_cross_c", horizontal=True, index=None)
+    st.multiselect("How is cross contact avoided?", ["validated cleaning procedures (swabs/visual/Elisa)","production scheduling","control of personnel movement","staff training","documented procedures and controls","isolated storage of allergens","other"], key="f3_avoid_c")
+    st.divider()
+    st.markdown("### 4. DIETARY SUITABILITY")
+    st.radio("Vegan Suitable (NO meat, milk, eggs, honey)", ["Yes","No"], key="f3_vegan_c", horizontal=True, index=None)
+    st.radio("Lacto Vegetarian Suitable", ["Yes","No"], key="f3_lacto_c", horizontal=True, index=None)
+    st.radio("Ovo Vegetarian Suitable", ["Yes","No"], key="f3_ovo_c", horizontal=True, index=None)
+    st.radio("Ovo Lacto Vegetarian Suitable", ["Yes","No"], key="f3_ovolacto_c", horizontal=True, index=None)
+    st.radio("Halaal Suitable - Is product Halaal certified? Yes attach cert", ["Yes","No"], key="f3_halaal_c", horizontal=True, index=None)
+    st.radio("Kosher Suitable - Is product Kosher certified? Yes attach cert", ["Yes","No"], key="f3_kosher_c", horizontal=True, index=None)
+    st.radio("Organic Certified? Yes attach cert", ["Yes","No"], key="f3_organic_c", horizontal=True, index=None)
+    st.radio("Hindu Suitable (contains NO beef)", ["Yes","No"], key="f3_hindu_c", horizontal=True, index=None)
+    st.divider()
+    st.markdown("### 5. Contaminants & Gene Technology")
+    st.caption("R.246 Pesticides, R.1809 Vet residues, R.500 Metals, R.491 Marine Biotoxins, R.1145 Mycotoxins, R.911 Solvents")
+    for reg in ["R.246 Pesticide residues","R.1809 Vet residues","R.500 Metals","R.491 Marine Biotoxins","R.1145 Mycotoxins","R.911 Solvents"]:
+        st.radio(f"Complies with {reg}?", ["Yes","No"], key=f"f3_reg_{reg}_c", horizontal=True, index=None)
+    st.markdown("**5.2 Food Produced using Gene Technology**")
+    st.radio("Q1: Any GM material/derived from GM?", ["Yes","May contain","No - Go to Section 6"], key="f3_gm1_c", horizontal=True, index=None)
+    st.radio("Q2: Require labelling per R.25 GM labelling?", ["Yes","No"], key="f3_gm2_c", horizontal=True, index=None)
+    st.radio("Q3: Contains GM novel DNA/protein?", ["Does not contain","Contains or May contain exempt","Contains or May contain which requires labelling"], key="f3_gm3_c", horizontal=True, index=None)
+    st.radio("Q4: Any GM components have altered characteristics?", ["Yes","No"], key="f3_gm4_c", horizontal=True, index=None)
+    st.data_editor(pd.DataFrame([{"GM Component":"","Altered Characteristics":""} for _ in range(3)]), num_rows="dynamic", key="f3_gm_table_c")
+    st.divider()
+    st.markdown("### 6. Storage & 8. Specifications")
+    c_s1, c_s2 = st.columns(2)
+    with c_s1:
+        st.text_input("Recommended Storage Conditions - Unopened", key="f3_store_un_c")
+        st.text_input("Shelf Life - Unopened", key="f3_shelf_un_c")
+    with c_s2:
+        st.text_input("Recommended Storage Conditions - Opened", key="f3_store_op_c")
+        st.text_input("Shelf Life - Opened", key="f3_shelf_op_c")
+    st.text_input("Recommended Transportation Requirements", key="f3_trans_c")
+    st.markdown("**8.1 Physical Specifications**")
+    st.data_editor(pd.DataFrame([{"Test / Parameter":"","Specification":"","Test Method":""} for _ in range(4)]), num_rows="dynamic", key="f3_phys_c")
+    st.markdown("**8.2 Chemical Specifications**")
+    st.data_editor(pd.DataFrame([{"Test / Parameter":"","Specification":"","Test Method":""} for _ in range(4)]), num_rows="dynamic", key="f3_chem_c")
+    st.markdown("**8.3 Microbiological Specifications**")
+    st.data_editor(pd.DataFrame([{"Test / Parameter":"","Specification":"","Test Method":""} for _ in range(8)]), num_rows="dynamic", key="f3_micro_c")
+    st.file_uploader("Upload supporting docs: Halaal cert, Kosher cert, Spec sheets, Test methods", accept_multiple_files=True, key="f3_docs_c")
     st.form_submit_button("✅ Submit Product Information Form - FINAL")
