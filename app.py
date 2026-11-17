@@ -23,6 +23,7 @@ def load_data():
     df = df.rename(columns={"material_cat": "material_category"})
     return df
 df = load_data()
+st.write("COLUMNS:", list(df.columns))
 priority = ["supplier_distributor","manufacturer","rm_code","rm_description","origin_country","vendor_code","mfg_code"]
 other_cols = [c for c in df.columns if c not in priority]
 ordered = [c for c in priority if c in df.columns] + other_cols
