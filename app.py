@@ -16,9 +16,9 @@ st.title("📊 SQMS Supplier Portal - Food Safety Compliance")
 @st.cache_data
 def load_data():
     try:
-        return pd.read_csv("supplier_compliance.csv", sep=None, engine="python")
+        return pd.read_csv("supplier_compliance.csv", sep=";")
     except:
-        return pd.read_csv("SQMS_data.csv", sep=None, engine="python")
+        return pd.read_csv("SQMS_data.csv")
 df = load_data()
 priority = ["supplier_distributor","manufacturer","rm_code","rm_description","origin_country","vendor_code","mfg_code"]
 other_cols = [c for c in df.columns if c not in priority]
