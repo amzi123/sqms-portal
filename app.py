@@ -16,10 +16,10 @@ st.title("📊 SQMS Supplier Portal - Food Safety Compliance")
 @st.cache_data
 def load_data():
     try:
-        df = pd.read_csv("SQMS_data.csv", encoding="latin1", engine="python", on_bad_lines="skip")
+        df = pd.read_csv("supplier_compliance.csv", sep=";", encoding="latin1", engine="python", on_bad_lines="skip")
     except:
-        df = pd.read_csv("supplier_compliance.csv", encoding="latin1", engine="python", on_bad_lines="skip")
-    # Fix column names: "Supplier / Distributor" -> "supplier_distributor"
+        df = pd.read_csv("SQMS_data.csv", encoding="latin1", engine="python", on_bad_lines="skip")
+    # Clean column names
     df.columns = df.columns.str.strip().str.lower().str.replace(r'[^a-z0-9]+', '_', regex=True).str.strip('_')
     return df
 
