@@ -44,6 +44,25 @@ else:
     my_rms = df[df["supplier_distributor"] == matched_supplier]
     st.success(f"Welcome {matched_supplier} — {len(my_rms)} RM(s)")
     st.dataframe(my_rms[ordered], width='stretch')
+        # --- NEW: Highlight ONE raw material to upload for ---
+    selected_material = st.selectbox(
+        "👉 Highlight the Raw Material you want to upload for:",
+        my_rms["rm_description"].tolist(),
+        key="selected_rm_complete"
+    )
+
+    st.info(f"You are uploading for: **{selected_material}**")
+
+    # Show just the highlighted row, big
+    highlight = my_rms[my_rms["rm_description"] == selected_material]
+    st.dataframe(highlight[ordered], width='stretch')
+
+    # --- NEW: Upload tied to THAT material ---
+    doc_type = st.selectbox("Document Type", ["Safety Certificate", "Quality Audit", "Insurance", "Compliance Declaration", "CoA"], key="doc_type_complete")
+    uploaded_file = st.file_uploader(f"Upload {doc_type} for {selected_material}", type=["pdf","jpg","png","docx","xlsx"], key="upload_complete")
+
+    if uploaded_file and st.button("Submit Document", key="submit_complete"):
+        st.success(f"✅ {doc_type} uploaded for {matched_supplier} - {selected_material}!")
 
 def q(label, key):
     return st.radio(label, ["Yes","No","N/A"], index=None, key=key, horizontal=True)
