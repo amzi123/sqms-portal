@@ -58,7 +58,7 @@ else:
     st.dataframe(highlight[ordered], width='stretch')
 
     # --- NEW: Upload tied to THAT material ---
-    doc_type = st.selectbox("Document Type", ["Safety Certificate", "Quality Audit", "Insurance", "Compliance Declaration", "CoA"], key="doc_type_complete")
+       doc_type = st.selectbox("Document Type", ["Certificate of Acceptability (COA)", "Food Safety Certificate (FSSC 22000 or other)", "Kosher", "Halaal", "Specification", "Technical Data Sheet", "Safety Data Sheet", "Heavy Metals Results", "Pesticides Results"], key="doc_type_complete")
     uploaded_file = st.file_uploader(f"Upload {doc_type} for {selected_material}", type=["pdf","jpg","png","docx","xlsx"], key="upload_complete")
 
     if uploaded_file and st.button("Submit Document", key="submit_complete"):
