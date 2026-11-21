@@ -58,9 +58,12 @@ else:
     st.dataframe(highlight[ordered], width='stretch')
 
     # --- NEW: Upload tied to THAT material ---
-    doc_type = st.selectbox("Document Type", ["Certificate of Acceptability (COA)", "Food Safety Certificate (FSSC 22000 or other)", "Kosher", "Halaal", "Specification", "Technical Data Sheet", "Safety Data Sheet", "Heavy Metals Results", "Pesticides Results"], key="doc_type_complete")
+        doc_type = st.selectbox("Document Type", ["Certificate of Acceptability (COA)", "Food Safety Certificate (FSSC 22000 or other)", "Kosher", "Halaal", "Specification", "Technical Data Sheet", "Safety Data Sheet", "Heavy Metals Results", "Pesticides Results"], key="doc_type_complete")
     uploaded_file = st.file_uploader(f"Upload {doc_type} for {selected_material}", type=["pdf","jpg","png","docx","xlsx"], key="upload_complete")
     if uploaded_file and st.button("Submit Document", key="submit_complete"):
+        if "uploaded_docs" not in st.session_state:
+            st.session_state.uploaded_docs = []
+        st.session_state.uploaded_docs.append({"supplier": matched_supplier, "material": selected_material, "doc_type": doc_type, "file_name": uploaded_file.name, "file_bytes": uploaded_file.getvalue()})
         st.success(f"✅ {doc_type} uploaded for {matched_supplier} - {selected_material}!")
 
 def q(label, key):
@@ -304,3 +307,17 @@ with st.form("form3_complete_full"):
     st.data_editor(pd.DataFrame([{"Test / Parameter":"","Specification":"","Test Method":""} for _ in range(8)]), num_rows="dynamic", key="f3_micro_c")
     st.file_uploader("Upload supporting docs: Halaal cert, Kosher cert, Spec sheets, Test methods", accept_multiple_files=True, key="f3_docs_c")
     st.form_submit_button("✅ Submit Product Information Form - FINAL")
+
+st.divider()
+st.header("Admin - Download Uploaded Documents")
+if "uploaded_docs" not in st.session_state or len(st.session_state.uploaded_docs) == 0:
+    st.info("No documents uploaded yet.")
+else:
+    for i, doc in enumerate(st.session_state.uploaded_docs):
+        col1, col2, col3 = st.columns([3, 2, 1])
+        with col1:
+            st.write(f"{doc['supplier']} - {doc['material']} - {doc['doc_type']}")
+        with col2:
+            st.write(doc['file_name'])
+        with col3:
+            st.download_button("Download", data=doc['file_bytes'], file_name=doc['file_name'], key=f"dl_{i}")
