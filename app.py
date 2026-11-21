@@ -12,38 +12,6 @@ div[data-testid="stMetricValue"] { color: #2ee5c8 !important; }
 """, unsafe_allow_html=True)
 
 st.title("📊 SQMS Supplier Portal - Food Safety Compliance")
-view = st.radio("View as:", ["Supplier", "Admin"], horizontal=True, key="view_selector")
-if view == "Admin":
-    st.header("Admin Dashboard - Supplier Progress")
-    required_docs = ["Certificate of Acceptability (COA)", "Food Safety Certificate (FSSC 22000 or other)", "Kosher", "Halaal", "Specification", "Technical Data Sheet", "Safety Data Sheet", "Heavy Metals Results", "Pesticides Results"]
-    if "uploaded_docs" not in st.session_state or len(st.session_state.uploaded_docs) == 0:
-        st.info("No documents uploaded yet. Suppliers need to upload to see progress here.")
-    else:
-        all_suppliers = sorted(list(set([d["supplier"] for d in st.session_state.uploaded_docs])))
-        selected_admin_supplier = st.selectbox("Filter by Supplier", ["All Suppliers"] + all_suppliers)
-        docs_to_show = st.session_state.uploaded_docs
-        if selected_admin_supplier != "All Suppliers":
-            docs_to_show = [d for d in docs_to_show if d["supplier"] == selected_admin_supplier]
-        materials = sorted(list(set([d["material"] for d in docs_to_show])))
-        for mat in materials:
-            uploaded_for_mat = list(set([d["doc_type"] for d in docs_to_show if d["material"] == mat]))
-            pct = int(len(uploaded_for_mat) / len(required_docs) * 100)
-            st.write(f"**{mat}** - {pct}% complete ({len(uploaded_for_mat)}/{len(required_docs)} docs)")
-            st.progress(pct / 100)
-            missing = [r for r in required_docs if r not in uploaded_for_mat]
-            if missing:
-                st.write("Missing: " + ", ".join(missing))
-            else:
-                st.write("✅ All documents uploaded")
-        st.divider()
-        st.subheader("Download Uploaded Documents")
-        for i, doc in enumerate(docs_to_show):
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.write(f"{doc['supplier']} - {doc['material']} - {doc['doc_type']} - {doc['file_name']}")
-            with col2:
-                st.download_button("Download", data=doc["file_bytes"], file_name=doc["file_name"], key=f"admin_dl_{i}")
-    st.stop()
 
 @st.cache_data
 def load_data():
